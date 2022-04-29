@@ -3,6 +3,10 @@ import startup from "./lib/startup";
 import api from "./api/index";
 import middleware from "./middleware/index";
 import logger from "./lib/logger";
+import jobs from "./api/jobs";
+
+
+
 
 startup()
   .then(() => {
@@ -11,7 +15,7 @@ startup()
 
     middleware(app);
     api(app);
-
+    jobs(app);
     app.listen(port, () => {
       if (process.send) {
         process.send(`Server running at http://localhost:${port}\n\n`);

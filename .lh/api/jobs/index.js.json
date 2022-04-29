@@ -1,0 +1,118 @@
+{
+    "sourceFile": "api/jobs/index.js",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 25,
+            "patches": [
+                {
+                    "date": 1651156928768,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1651157141916,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -1,5 +1,17 @@\n+import Agenda from \"agenda\";\r\n+import settings from \"../../lib/settings\";\r\n+\r\n+const jobQueue = new Agenda({\r\n+  db: {\r\n\\ No newline at end of file\n+    address: settings.databases.mongodb.uri,\r\n+    collection: \"jobs\",\r\n+  },\r\n+});\r\n+\r\n+jobQueue.start();\r\n+\r\n export default (app) => {\r\n-    app.use(\"/jobs\", (req, res) => {\r\n-      res.send(\"Job added to queue!\");\r\n-    });\r\n-  };\n+  app.use(\"/jobs\", (req, res) => {\r\n+    res.send(\"Job added to queue!\");\r\n+  });\r\n+};\n\\ No newline at end of file\n"
+                },
+                {
+                    "date": 1651157695566,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -1,17 +1,44 @@\n import Agenda from \"agenda\";\r\n+import dayjs from \"dayjs\";\r\n import settings from \"../../lib/settings\";\r\n \r\n-const jobQueue = new Agenda({\r\n-  db: {\r\n-    address: settings.databases.mongodb.uri,\r\n-    collection: \"jobs\",\r\n-  },\r\n-});\r\n+const jobQueue = new Agenda({ ... });\r\n \r\n+jobQueue.define(\"instantJob\", async (job) => { ... });\r\n+\r\n+jobQueue.define(\"delayedJob\", async (job) => { ... });\r\n+\r\n jobQueue.start();\r\n \r\n export default (app) => {\r\n   app.use(\"/jobs\", (req, res) => {\r\n+    const jobType = req?.query?.jobType;\r\n+    const allowedJobs = Object.keys(jobQueue._definitions);\r\n+\r\n+    if (!jobType) {\r\n+      return res.send(\"Must pass a jobType in the query params.\");\r\n+    }\r\n+\r\n+    if (!allowedJobs.includes(jobType)) {\r\n+      return res.send(\r\n+        `${jobType} is not supported. Must pass one of ${allowedJobs.join(\r\n+          \", or \"\r\n+        )} as jobType in the query params.`\r\n+      );\r\n+    }\r\n+\r\n+    if (jobType === \"instantJob\") {\r\n+      jobQueue.now(req?.query?.jobType, req.body);\r\n+    }\r\n+\r\n+    if (jobType === \"delayedJob\") {\r\n+      jobQueue.schedule(\r\n+        dayjs().add(5, \"seconds\").format(),\r\n+        req?.query?.jobType,\r\n+        req.body\r\n+      );\r\n+    }\r\n+\r\n     res.send(\"Job added to queue!\");\r\n   });\r\n };\n\\ No newline at end of file\n"
+                },
+                {
+                    "date": 1651157719847,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -1,44 +1,5 @@\n-import Agenda from \"agenda\";\r\n-import dayjs from \"dayjs\";\r\n-import settings from \"../../lib/settings\";\r\n-\r\n-const jobQueue = new Agenda({ ... });\r\n-\r\n-jobQueue.define(\"instantJob\", async (job) => { ... });\r\n-\r\n-jobQueue.define(\"delayedJob\", async (job) => { ... });\r\n-\r\n-jobQueue.start();\r\n-\r\n export default (app) => {\r\n-  app.use(\"/jobs\", (req, res) => {\r\n-    const jobType = req?.query?.jobType;\r\n-    const allowedJobs = Object.keys(jobQueue._definitions);\r\n-\r\n-    if (!jobType) {\r\n-      return res.send(\"Must pass a jobType in the query params.\");\r\n-    }\r\n-\r\n-    if (!allowedJobs.includes(jobType)) {\r\n-      return res.send(\r\n-        `${jobType} is not supported. Must pass one of ${allowedJobs.join(\r\n-          \", or \"\r\n-        )} as jobType in the query params.`\r\n-      );\r\n-    }\r\n-\r\n-    if (jobType === \"instantJob\") {\r\n-      jobQueue.now(req?.query?.jobType, req.body);\r\n-    }\r\n-\r\n-    if (jobType === \"delayedJob\") {\r\n-      jobQueue.schedule(\r\n-        dayjs().add(5, \"seconds\").format(),\r\n-        req?.query?.jobType,\r\n-        req.body\r\n-      );\r\n-    }\r\n-\r\n-    res.send(\"Job added to queue!\");\r\n-  });\r\n-};\n\\ No newline at end of file\n+    app.use(\"/jobs\", (req, res) => {\r\n+      res.send(\"Job added to queue!\");\r\n+    });\r\n+  };\n\\ No newline at end of file\n"
+                },
+                {
+                    "date": 1651157744624,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -1,5 +1,44 @@\n+import Agenda from \"agenda\";\r\n+import dayjs from \"dayjs\";\r\n+import settings from \"../../lib/settings\";\r\n+\r\n+const jobQueue = new Agenda({ ... });\r\n\\ No newline at end of file\n+\r\n+jobQueue.define(\"instantJob\", async (job) => { ... });\r\n+\r\n+jobQueue.define(\"delayedJob\", async (job) => { ... });\r\n+\r\n+jobQueue.start();\r\n+\r\n export default (app) => {\r\n-    app.use(\"/jobs\", (req, res) => {\r\n-      res.send(\"Job added to queue!\");\r\n-    });\r\n-  };\n+  app.use(\"/jobs\", (req, res) => {\r\n+    const jobType = req?.query?.jobType;\r\n+    const allowedJobs = Object.keys(jobQueue._definitions);\r\n+\r\n+    if (!jobType) {\r\n+      return res.send(\"Must pass a jobType in the query params.\");\r\n+    }\r\n+\r\n+    if (!allowedJobs.includes(jobType)) {\r\n+      return res.send(\r\n+        `${jobType} is not supported. Must pass one of ${allowedJobs.join(\r\n+          \", or \"\r\n+        )} as jobType in the query params.`\r\n+      );\r\n+    }\r\n+\r\n+    if (jobType === \"instantJob\") {\r\n+      jobQueue.now(req?.query?.jobType, req.body);\r\n+    }\r\n+\r\n+    if (jobType === \"delayedJob\") {\r\n+      jobQueue.schedule(\r\n+        dayjs().add(5, \"seconds\").format(),\r\n+        req?.query?.jobType,\r\n+        req.body\r\n+      );\r\n+    }\r\n+\r\n+    res.send(\"Job added to queue!\");\r\n+  });\r\n+};\n\\ No newline at end of file\n"
+                },
+                {
+                    "date": 1651157767825,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -1,9 +1,14 @@\n import Agenda from \"agenda\";\r\n import dayjs from \"dayjs\";\r\n import settings from \"../../lib/settings\";\r\n \r\n-const jobQueue = new Agenda({ ... });\r\n+const jobQueue = new Agenda({\r\n+    db: {\r\n+      address: settings.databases.mongodb.uri,\r\n+      collection: \"jobs\",\r\n+    },\r\n+  });\r\n \r\n jobQueue.define(\"instantJob\", async (job) => { ... });\r\n \r\n jobQueue.define(\"delayedJob\", async (job) => { ... });\r\n"
+                },
+                {
+                    "date": 1651157786674,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -7,9 +7,8 @@\n       address: settings.databases.mongodb.uri,\r\n       collection: \"jobs\",\r\n     },\r\n   });\r\n-\r\n jobQueue.define(\"instantJob\", async (job) => { ... });\r\n \r\n jobQueue.define(\"delayedJob\", async (job) => { ... });\r\n \r\n"
+                },
+                {
+                    "date": 1651157830489,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -7,11 +7,24 @@\n       address: settings.databases.mongodb.uri,\r\n       collection: \"jobs\",\r\n     },\r\n   });\r\n-jobQueue.define(\"instantJob\", async (job) => { ... });\r\n \r\n-jobQueue.define(\"delayedJob\", async (job) => { ... });\r\n+  jobQueue.define(\"instantJob\", async (job) => {\r\n+    const data = job?.attrs?.data;\r\n+    console.log(\r\n+      \"This job is running as soon as it was received. This is the data that was sent:\"\r\n+    );\r\n+    console.log(data);\r\n+  });\r\n+  \r\n+  jobQueue.define(\"delayedJob\", async (job) => {\r\n+    const data = job?.attrs?.data;\r\n+    console.log(\r\n+      \"This job is running after a 5 second delay. This is the data that was sent:\"\r\n+    );\r\n+    console.log(data);\r\n+  });\r\n \r\n jobQueue.start();\r\n \r\n export default (app) => {\r\n"
+                },
+                {
+                    "date": 1651159280166,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -55,7 +55,16 @@\n         req.body\r\n       );\r\n     }\r\n \r\n+    if (jobType === \"periodical\") {\r\n+        jobQueue.every(\r\n+            \"10 seconds\",\r\n+          req?.query?.jobName,\r\n+          req.body\r\n+        );\r\n+      }\r\n+\r\n+\r\n     res.send(\"Job added to queue!\");\r\n   });\r\n };\n\\ No newline at end of file\n"
+                },
+                {
+                    "date": 1651159345015,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -57,9 +57,9 @@\n     }\r\n \r\n     if (jobType === \"periodical\") {\r\n         jobQueue.every(\r\n-            \"10 seconds\",\r\n+            `${req?.query?.seconds} seconds`,\r\n           req?.query?.jobName,\r\n           req.body\r\n         );\r\n       }\r\n"
+                },
+                {
+                    "date": 1651159460886,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -24,8 +24,16 @@\n     );\r\n     console.log(data);\r\n   });\r\n \r\n+  jobQueue.define(\"periodical\", async (job) => {\r\n+    const data = job?.attrs?.data;\r\n+    console.log(\r\n+      \"This job is running every certain time. This is the data that was sent:\"\r\n+    );\r\n+    console.log(data);\r\n+  });\r\n+\r\n jobQueue.start();\r\n \r\n export default (app) => {\r\n   app.use(\"/jobs\", (req, res) => {\r\n"
+                },
+                {
+                    "date": 1651159531044,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -64,12 +64,16 @@\n       );\r\n     }\r\n \r\n     if (jobType === \"periodical\") {\r\n+        const seconds = req?.query?.seconds\r\n         jobQueue.every(\r\n-            `${req?.query?.seconds} seconds`,\r\n+            `${seconds} seconds`,\r\n           req?.query?.jobName,\r\n-          req.body\r\n+          {\r\n+            ...req.body,\r\n+            seconds\r\n+        }\r\n         );\r\n       }\r\n \r\n \r\n"
+                },
+                {
+                    "date": 1651159572877,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -27,9 +27,9 @@\n \r\n   jobQueue.define(\"periodical\", async (job) => {\r\n     const data = job?.attrs?.data;\r\n     console.log(\r\n-      \"This job is running every certain time. This is the data that was sent:\"\r\n+      `This job is running every ${seconds} seconds. This is the data that was sent:`\r\n     );\r\n     console.log(data);\r\n   });\r\n \r\n"
+                },
+                {
+                    "date": 1651159585352,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -26,8 +26,9 @@\n   });\r\n \r\n   jobQueue.define(\"periodical\", async (job) => {\r\n     const data = job?.attrs?.data;\r\n+    const seconds = data.seconds\r\n     console.log(\r\n       `This job is running every ${seconds} seconds. This is the data that was sent:`\r\n     );\r\n     console.log(data);\r\n"
+                },
+                {
+                    "date": 1651160004112,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -26,9 +26,9 @@\n   });\r\n \r\n   jobQueue.define(\"periodical\", async (job) => {\r\n     const data = job?.attrs?.data;\r\n-    const seconds = data.seconds\r\n+    const seconds = data.seconds;\r\n     console.log(\r\n       `This job is running every ${seconds} seconds. This is the data that was sent:`\r\n     );\r\n     console.log(data);\r\n@@ -66,9 +66,9 @@\n     }\r\n \r\n     if (jobType === \"periodical\") {\r\n         const seconds = req?.query?.seconds\r\n-        jobQueue.every(\r\n+        jobQueue.processEvery(\r\n             `${seconds} seconds`,\r\n           req?.query?.jobName,\r\n           {\r\n             ...req.body,\r\n"
+                },
+                {
+                    "date": 1651160273159,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -68,12 +68,12 @@\n     if (jobType === \"periodical\") {\r\n         const seconds = req?.query?.seconds\r\n         jobQueue.processEvery(\r\n             `${seconds} seconds`,\r\n-          req?.query?.jobName,\r\n+          'periodical',\r\n           {\r\n             ...req.body,\r\n-            seconds\r\n+            ...req.query\r\n         }\r\n         );\r\n       }\r\n \r\n"
+                },
+                {
+                    "date": 1651160495128,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -66,8 +66,9 @@\n     }\r\n \r\n     if (jobType === \"periodical\") {\r\n         const seconds = req?.query?.seconds\r\n+        console.log(seconds)\r\n         jobQueue.processEvery(\r\n             `${seconds} seconds`,\r\n           'periodical',\r\n           {\r\n"
+                },
+                {
+                    "date": 1651160515771,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -66,9 +66,8 @@\n     }\r\n \r\n     if (jobType === \"periodical\") {\r\n         const seconds = req?.query?.seconds\r\n-        console.log(seconds)\r\n         jobQueue.processEvery(\r\n             `${seconds} seconds`,\r\n           'periodical',\r\n           {\r\n"
+                },
+                {
+                    "date": 1651160521830,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -66,9 +66,9 @@\n     }\r\n \r\n     if (jobType === \"periodical\") {\r\n         const seconds = req?.query?.seconds\r\n-        jobQueue.processEvery(\r\n+        jobQueue.every(\r\n             `${seconds} seconds`,\r\n           'periodical',\r\n           {\r\n             ...req.body,\r\n"
+                },
+                {
+                    "date": 1651161420553,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -39,9 +39,14 @@\n export default (app) => {\r\n   app.use(\"/jobs\", (req, res) => {\r\n     const jobType = req?.query?.jobType;\r\n     const allowedJobs = Object.keys(jobQueue._definitions);\r\n+    const jobToCancel = req?.query?.jobToCancel;\r\n \r\n+    if(jobToCancel){\r\n+        jobQueue.cancel({name:jobToCancel})\r\n+    }\r\n+\r\n     if (!jobType) {\r\n       return res.send(\"Must pass a jobType in the query params.\");\r\n     }\r\n \r\n"
+                },
+                {
+                    "date": 1651161513417,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -43,46 +43,50 @@\n     const jobToCancel = req?.query?.jobToCancel;\r\n \r\n     if(jobToCancel){\r\n         jobQueue.cancel({name:jobToCancel})\r\n-    }\r\n+    } else{\r\n \r\n-    if (!jobType) {\r\n-      return res.send(\"Must pass a jobType in the query params.\");\r\n-    }\r\n+        if (!jobType) {\r\n+            return res.send(\"Must pass a jobType in the query params.\");\r\n+          }\r\n+      \r\n+          if (!allowedJobs.includes(jobType)) {\r\n+            return res.send(\r\n+              `${jobType} is not supported. Must pass one of ${allowedJobs.join(\r\n+                \", or \"\r\n+              )} as jobType in the query params.`\r\n+            );\r\n+          }\r\n+      \r\n+          if (jobType === \"instantJob\") {\r\n+            jobQueue.now(req?.query?.jobType, req.body);\r\n+          }\r\n+      \r\n+          if (jobType === \"delayedJob\") {\r\n+            jobQueue.schedule(\r\n+              dayjs().add(5, \"seconds\").format(),\r\n+              req?.query?.jobType,\r\n+              req.body\r\n+            );\r\n+          }\r\n+      \r\n+          if (jobType === \"periodical\") {\r\n+              const seconds = req?.query?.seconds\r\n+              jobQueue.every(\r\n+                  `${seconds} seconds`,\r\n+                'periodical',\r\n+                {\r\n+                  ...req.body,\r\n+                  ...req.query\r\n+              }\r\n+              );\r\n+            }\r\n+      \r\n \r\n-    if (!allowedJobs.includes(jobType)) {\r\n-      return res.send(\r\n-        `${jobType} is not supported. Must pass one of ${allowedJobs.join(\r\n-          \", or \"\r\n-        )} as jobType in the query params.`\r\n-      );\r\n     }\r\n \r\n-    if (jobType === \"instantJob\") {\r\n-      jobQueue.now(req?.query?.jobType, req.body);\r\n-    }\r\n+    \r\n \r\n-    if (jobType === \"delayedJob\") {\r\n-      jobQueue.schedule(\r\n-        dayjs().add(5, \"seconds\").format(),\r\n-        req?.query?.jobType,\r\n-        req.body\r\n-      );\r\n-    }\r\n-\r\n-    if (jobType === \"periodical\") {\r\n-        const seconds = req?.query?.seconds\r\n-        jobQueue.every(\r\n-            `${seconds} seconds`,\r\n-          'periodical',\r\n-          {\r\n-            ...req.body,\r\n-            ...req.query\r\n-        }\r\n-        );\r\n-      }\r\n-\r\n-\r\n     res.send(\"Job added to queue!\");\r\n   });\r\n };\n\\ No newline at end of file\n"
+                },
+                {
+                    "date": 1651161680724,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -43,8 +43,9 @@\n     const jobToCancel = req?.query?.jobToCancel;\r\n \r\n     if(jobToCancel){\r\n         jobQueue.cancel({name:jobToCancel})\r\n+        console.log(`Job with name ${jobToCancel} was cancelled`)\r\n     } else{\r\n \r\n         if (!jobType) {\r\n             return res.send(\"Must pass a jobType in the query params.\");\r\n"
+                },
+                {
+                    "date": 1651163589767,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -8,33 +8,8 @@\n       collection: \"jobs\",\r\n     },\r\n   });\r\n \r\n-  jobQueue.define(\"instantJob\", async (job) => {\r\n-    const data = job?.attrs?.data;\r\n-    console.log(\r\n-      \"This job is running as soon as it was received. This is the data that was sent:\"\r\n-    );\r\n-    console.log(data);\r\n-  });\r\n-  \r\n-  jobQueue.define(\"delayedJob\", async (job) => {\r\n-    const data = job?.attrs?.data;\r\n-    console.log(\r\n-      \"This job is running after a 5 second delay. This is the data that was sent:\"\r\n-    );\r\n-    console.log(data);\r\n-  });\r\n-\r\n-  jobQueue.define(\"periodical\", async (job) => {\r\n-    const data = job?.attrs?.data;\r\n-    const seconds = data.seconds;\r\n-    console.log(\r\n-      `This job is running every ${seconds} seconds. This is the data that was sent:`\r\n-    );\r\n-    console.log(data);\r\n-  });\r\n-\r\n jobQueue.start();\r\n \r\n export default (app) => {\r\n   app.use(\"/jobs\", (req, res) => {\r\n"
+                },
+                {
+                    "date": 1651163750317,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -16,42 +16,34 @@\n     const jobType = req?.query?.jobType;\r\n     const allowedJobs = Object.keys(jobQueue._definitions);\r\n     const jobToCancel = req?.query?.jobToCancel;\r\n \r\n+    \r\n+\r\n     if(jobToCancel){\r\n         jobQueue.cancel({name:jobToCancel})\r\n         console.log(`Job with name ${jobToCancel} was cancelled`)\r\n     } else{\r\n \r\n-        if (!jobType) {\r\n-            return res.send(\"Must pass a jobType in the query params.\");\r\n-          }\r\n-      \r\n-          if (!allowedJobs.includes(jobType)) {\r\n-            return res.send(\r\n-              `${jobType} is not supported. Must pass one of ${allowedJobs.join(\r\n-                \", or \"\r\n-              )} as jobType in the query params.`\r\n-            );\r\n-          }\r\n-      \r\n-          if (jobType === \"instantJob\") {\r\n-            jobQueue.now(req?.query?.jobType, req.body);\r\n-          }\r\n-      \r\n-          if (jobType === \"delayedJob\") {\r\n-            jobQueue.schedule(\r\n-              dayjs().add(5, \"seconds\").format(),\r\n-              req?.query?.jobType,\r\n-              req.body\r\n-            );\r\n-          }\r\n-      \r\n+        \r\n+\r\n+\r\n           if (jobType === \"periodical\") {\r\n               const seconds = req?.query?.seconds\r\n+              const jobName = req?.query?.jobName\r\n+              jobQueue.define(jobName, async (job) => {\r\n+                const data = job?.attrs?.data;\r\n+                const seconds = data.seconds;\r\n+                console.log(\r\n+                  `${jobName} is running every ${seconds} seconds. This is the data that was sent:`\r\n+                );\r\n+                console.log(data);\r\n+              });\r\n+\r\n+              \r\n               jobQueue.every(\r\n                   `${seconds} seconds`,\r\n-                'periodical',\r\n+                jobName,\r\n                 {\r\n                   ...req.body,\r\n                   ...req.query\r\n               }\r\n"
+                },
+                {
+                    "date": 1651163756667,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -22,12 +22,8 @@\n     if(jobToCancel){\r\n         jobQueue.cancel({name:jobToCancel})\r\n         console.log(`Job with name ${jobToCancel} was cancelled`)\r\n     } else{\r\n-\r\n-        \r\n-\r\n-\r\n           if (jobType === \"periodical\") {\r\n               const seconds = req?.query?.seconds\r\n               const jobName = req?.query?.jobName\r\n               jobQueue.define(jobName, async (job) => {\r\n"
+                },
+                {
+                    "date": 1651163891141,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -16,8 +16,10 @@\n     const jobType = req?.query?.jobType;\r\n     const allowedJobs = Object.keys(jobQueue._definitions);\r\n     const jobToCancel = req?.query?.jobToCancel;\r\n \r\n+    console.log(\"run\")\r\n+\r\n     \r\n \r\n     if(jobToCancel){\r\n         jobQueue.cancel({name:jobToCancel})\r\n"
+                }
+            ],
+            "date": 1651156928768,
+            "name": "Commit-0",
+            "content": "export default (app) => {\r\n    app.use(\"/jobs\", (req, res) => {\r\n      res.send(\"Job added to queue!\");\r\n    });\r\n  };"
+        }
+    ]
+}

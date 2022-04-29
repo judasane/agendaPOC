@@ -1,0 +1,34 @@
+{
+    "sourceFile": "index.js",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 4,
+            "patches": [
+                {
+                    "date": 1651156751490,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1651156779480,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -4,10 +4,9 @@\n import jobs from \"./api/jobs\";\r\n import middleware from \"./middleware/index\";\r\n import logger from \"./lib/logger\";\r\n \r\n-startup()\r\n-  .then(() => {\r\n+startup().then(() => {\r\n     const app = express();\r\n     const port = process.env.PORT || 5001;\r\n \r\n     middleware(app);\r\n"
+                },
+                {
+                    "date": 1651156788786,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -15,5 +15,5 @@\n \r\n     app.listen(port, () => { ... });\r\n \r\n     process.on(\"message\", (message) => { ... });\r\n-  }).catch((error) => { ... });\n\\ No newline at end of file\n+  })\n\\ No newline at end of file\n"
+                },
+                {
+                    "date": 1651156871618,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -1,19 +1,27 @@\n import express from \"express\";\r\n import startup from \"./lib/startup\";\r\n import api from \"./api/index\";\r\n-import jobs from \"./api/jobs\";\r\n import middleware from \"./middleware/index\";\r\n import logger from \"./lib/logger\";\r\n \r\n-startup().then(() => {\r\n+startup()\r\n+  .then(() => {\r\n     const app = express();\r\n     const port = process.env.PORT || 5001;\r\n \r\n     middleware(app);\r\n     api(app);\r\n     jobs(app);\r\n+    app.listen(port, () => {\r\n+      if (process.send) {\r\n+        process.send(`Server running at http://localhost:${port}\\n\\n`);\r\n\\ No newline at end of file\n+      }\r\n+    });\r\n \r\n-    app.listen(port, () => { ... });\r\n-\r\n-    process.on(\"message\", (message) => { ... });\r\n-  })\n+    process.on(\"message\", (message) => {\r\n+      console.log(message);\r\n+    });\r\n+  })\r\n+  .catch((error) => {\r\n+    logger.error(error);\r\n+  });\n\\ No newline at end of file\n"
+                },
+                {
+                    "date": 1651156974454,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -2,9 +2,13 @@\n import startup from \"./lib/startup\";\r\n import api from \"./api/index\";\r\n import middleware from \"./middleware/index\";\r\n import logger from \"./lib/logger\";\r\n+import jobs from \"./api/jobs\";\r\n \r\n+\r\n+\r\n+\r\n startup()\r\n   .then(() => {\r\n     const app = express();\r\n     const port = process.env.PORT || 5001;\r\n"
+                }
+            ],
+            "date": 1651156751490,
+            "name": "Commit-0",
+            "content": "import express from \"express\";\r\nimport startup from \"./lib/startup\";\r\nimport api from \"./api/index\";\r\nimport jobs from \"./api/jobs\";\r\nimport middleware from \"./middleware/index\";\r\nimport logger from \"./lib/logger\";\r\n\r\nstartup()\r\n  .then(() => {\r\n    const app = express();\r\n    const port = process.env.PORT || 5001;\r\n\r\n    middleware(app);\r\n    api(app);\r\n    jobs(app);\r\n\r\n    app.listen(port, () => { ... });\r\n\r\n    process.on(\"message\", (message) => { ... });\r\n  }).catch((error) => { ... });"
+        }
+    ]
+}

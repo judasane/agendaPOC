@@ -199,10 +199,10 @@ const warnMongoDBMissing = () => {
 const developmentServer = async () => {
   process.loader = new Loader({ defaultMessage: "Starting server..." });
 
-  const mongodbExists = commandExists.sync("mongod");
+  const mongodbExists = true // commandExists.sync("mongod");
 
   if (mongodbExists) {
-    const mongoProcessId = await startMongoDB();
+    //const mongoProcessId = await startMongoDB();
     startWebpack();
     handleSignalEvents(isWindows ? [] : [mongoProcessId]);
   } else {
